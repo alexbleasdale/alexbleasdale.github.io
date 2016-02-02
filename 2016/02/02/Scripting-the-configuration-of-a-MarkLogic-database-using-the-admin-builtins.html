@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <title>Scripting the configuration of a MarkLogic database using the admin builtins</title>
+    <meta name="description" content="" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="//alexbleasdale.github.io/themes/Casper/favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="//alexbleasdale.github.io/themes/Casper/assets/css/screen.css?v=1.0.0" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+
+    <link rel="canonical" href="https://alexbleasdale.github.io/2016/02/02/Scripting-the-configuration-of-a-MarkLogic-database-using-the-admin-builtins.html" />
+    
+    <meta property="og:site_name" content="Developer notes" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Scripting the configuration of a MarkLogic database using the admin builtins" />
+    <meta property="og:description" content="This is a useful pattern for ensuring you can script the setup of a given database Start by creating the database xquery version &quot;1.0-ml&quot;; import module namespace info = &quot;http://marklogic.com/appservices/infostudio&quot; at &quot;/MarkLogic/appservices/infostudio/info.xqy&quot;..." />
+    <meta property="og:url" content="https://alexbleasdale.github.io/2016/02/02/Scripting-the-configuration-of-a-MarkLogic-database-using-the-admin-builtins.html" />
+    <meta property="article:published_time" content="2016-02-02T00:00:00.000Z" />
+    <meta property="article:modified_time" content="2016-02-02T14:52:31.096Z" />
+    
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Scripting the configuration of a MarkLogic database using the admin builtins" />
+    <meta name="twitter:description" content="This is a useful pattern for ensuring you can script the setup of a given database Start by creating the database xquery version &quot;1.0-ml&quot;; import module namespace info = &quot;http://marklogic.com/appservices/infostudio&quot; at &quot;/MarkLogic/appservices/infostudio/info.xqy&quot;..." />
+    <meta name="twitter:url" content="https://alexbleasdale.github.io/2016/02/02/Scripting-the-configuration-of-a-MarkLogic-database-using-the-admin-builtins.html" />
+    
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "publisher": "Developer notes",
+    "author": {
+        "@type": "Person",
+        "name": "Alex Bleasdale",
+        "image": "https://avatars.githubusercontent.com/u/42101?v=3",
+        "url": "undefined/author/undefined",
+        "sameAs": null
+    },
+    "headline": "Scripting the configuration of a MarkLogic database using the admin builtins",
+    "url": "https://alexbleasdale.github.io/2016/02/02/Scripting-the-configuration-of-a-MarkLogic-database-using-the-admin-builtins.html",
+    "datePublished": "2016-02-02T00:00:00.000Z",
+    "dateModified": "2016-02-02T14:52:31.096Z",
+    "description": "This is a useful pattern for ensuring you can script the setup of a given database Start by creating the database xquery version &quot;1.0-ml&quot;; import module namespace info = &quot;http://marklogic.com/appservices/infostudio&quot; at &quot;/MarkLogic/appservices/infostudio/info.xqy&quot;..."
+}
+    </script>
+
+    <meta name="generator" content="Ghost ?" />
+    <link rel="alternate" type="application/rss+xml" title="Developer notes" href="https://alexbleasdale.github.io/rss" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css">
+</head>
+<body class="post-template">
+
+    
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="https://alexbleasdale.github.io">Home</a>
+        <!-- <a class="subscribe-button icon-feed" href="https://alexbleasdale.github.io/rss/">Subscribe</a> -->
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Scripting the configuration of a MarkLogic database using the admin builtins</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2016-02-02">02 February 2016</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <div class="paragraph">
+<p>This is a useful pattern for ensuring you can script the setup of a given database</p>
+</div>
+<div class="paragraph">
+<p>Start by creating the database</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xquery" data-lang="xquery">xquery version "1.0-ml";
+
+import module namespace info = "http://marklogic.com/appservices/infostudio" at "/MarkLogic/appservices/infostudio/info.xqy";
+
+info:database-create("{YOUR-DATABASE-NAME-HERE}")</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then script the configuration of the indexes and settings for that database like so:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xquery" data-lang="xquery">xquery version "1.0-ml";
+
+import module namespace admin = "http://marklogic.com/xdmp/admin" at "/MarkLogic/admin.xqy";
+
+declare variable $DATABASE as xs:unsignedLong := xdmp:database("{YOUR-DATABASE-NAME-HERE}");
+declare variable $CONFIG as element(configuration) := admin:get-configuration();
+
+let $CONFIG := admin:database-set-stemmed-searches($CONFIG, $DATABASE, "decompounding")
+let $CONFIG := admin:database-set-word-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-word-positions($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-fast-phrase-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-fast-reverse-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-fast-case-sensitive-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-fast-diacritic-sensitive-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-fast-element-word-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-element-word-positions($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-fast-element-phrase-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-element-value-positions($CONFIG, $DATABASE, fn:false())
+let $CONFIG := admin:database-set-attribute-value-positions($CONFIG, $DATABASE, fn:false())
+let $CONFIG := admin:database-set-field-value-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-field-value-positions($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-three-character-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-three-character-word-positions($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-fast-element-character-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-trailing-wildcard-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-trailing-wildcard-word-positions($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-set-fast-element-trailing-wildcard-searches($CONFIG, $DATABASE, fn:true())
+let $CONFIG := admin:database-add-word-lexicon($CONFIG, $DATABASE, admin:database-word-lexicon("http://marklogic.com/collation/codepoint"))
+
+return
+  admin:save-configuration($CONFIG)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To tear down the database:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xquery" data-lang="xquery">xquery version "1.0-ml";
+
+import module namespace info = "http://marklogic.com/appservices/infostudio" at "/MarkLogic/appservices/infostudio/info.xqy";
+
+info:database-delete("{YOUR-DATABASE-NAME-HERE}")</code></pre>
+</div>
+</div>
+        </section>
+
+        <footer class="post-footer">
+
+
+            <figure class="author-image">
+                <a class="img" href="" style="background-image: url(https://avatars.githubusercontent.com/u/42101?v=3)"><span class="hidden">Alex Bleasdale's Picture</span></a>
+            </figure>
+
+            <section class="author">
+                <h4><a href="">Alex Bleasdale</a></h4>
+
+                    <p>Read <a href="">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/share?text=Scripting%20the%20configuration%20of%20a%20MarkLogic%20database%20using%20the%20admin%20builtins&amp;url=https://alexbleasdale.github.io/2016/02/02/Scripting-the-configuration-of-a-MarkLogic-database-using-the-admin-builtins.html"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://alexbleasdale.github.io/2016/02/02/Scripting-the-configuration-of-a-MarkLogic-database-using-the-admin-builtins.html"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=https://alexbleasdale.github.io/2016/02/02/Scripting-the-configuration-of-a-MarkLogic-database-using-the-admin-builtins.html"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+        </footer>
+
+
+    </article>
+
+</main>
+
+
+
+    <footer class="site-footer clearfix">
+        <section class="copyright"><a href="https://alexbleasdale.github.io">Developer notes</a> &copy; 2016</section>
+        <section class="poweredby">Proudly published with <a href="http://hubpress.io">HubPress</a></section>
+    </footer>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js?v="></script> <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.min.js?v="></script> <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js?v="></script> 
+      <script type="text/javascript">
+        jQuery( document ).ready(function() {
+          // change date with ago
+          jQuery('ago.ago').each(function(){
+            var element = jQuery(this).parent();
+            element.html( moment(element.text()).fromNow());
+          });
+        });
+
+        hljs.initHighlightingOnLoad();      
+      </script>
+
+    <script type="text/javascript" src="//alexbleasdale.github.io/themes/Casper/assets/js/jquery.fitvids.js?v=1.0.0"></script>
+    <script type="text/javascript" src="//alexbleasdale.github.io/themes/Casper/assets/js/index.js?v=1.0.0"></script>
+
+</body>
+</html>
