@@ -5,7 +5,13 @@ Testdriving HubPress for GitHub
 Here's a new idea:
 
 ```xquery
+xquery version "1.0-ml";
 
-Some code here 
-
+text {
+let $stuff := 
+for $i in xdmp:database-forests(xdmp:database("test"))
+return xs:string($i)
+return
+string-join($stuff, ", ")
+}
 ```
