@@ -1,6 +1,6 @@
-= my title
+= New Developer Notes Blog
 
-My content
+Testdriving HubPress for GitHub
 
 Here's a new idea:
 
