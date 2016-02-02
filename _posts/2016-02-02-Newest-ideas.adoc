@@ -1,4 +1,4 @@
-= New Developer Notes Blog
+= Newest ideas
 
 Testdriving HubPress for GitHub
 
