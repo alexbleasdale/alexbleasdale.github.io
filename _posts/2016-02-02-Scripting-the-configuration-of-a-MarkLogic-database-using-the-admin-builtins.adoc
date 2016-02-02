@@ -1,3 +1,63 @@
-= Next idea
+= Scripting the configuration of a MarkLogic database using the admin builtins
 
-Which is....?
+This is a useful pattern for ensuring you can script the setup of a given database
+
+Start by creating the database
+
+[source,xquery]
+----
+xquery version "1.0-ml";
+
+import module namespace info = "http://marklogic.com/appservices/infostudio" at "/MarkLogic/appservices/infostudio/info.xqy";
+
+info:database-create("{YOUR-DATABASE-NAME-HERE}")
+----
+
+Then script the configuration of the indexes and settings for that database like so:
+
+
+[source,xquery]
+----
+xquery version "1.0-ml";
+
+import module namespace admin = "http://marklogic.com/xdmp/admin" at "/MarkLogic/admin.xqy";
+
+declare variable $DATABASE as xs:unsignedLong := xdmp:database("{YOUR-DATABASE-NAME-HERE}");
+declare variable $CONFIG as element(configuration) := admin:get-configuration();
+
+let $CONFIG := admin:database-set-stemmed-searches($CONFIG, $DATABASE, "decompounding") 
+let $CONFIG := admin:database-set-word-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-word-positions($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-fast-phrase-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-fast-reverse-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-fast-case-sensitive-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-fast-diacritic-sensitive-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-fast-element-word-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-element-word-positions($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-fast-element-phrase-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-element-value-positions($CONFIG, $DATABASE, fn:false())  
+let $CONFIG := admin:database-set-attribute-value-positions($CONFIG, $DATABASE, fn:false())  
+let $CONFIG := admin:database-set-field-value-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-field-value-positions($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-three-character-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-three-character-word-positions($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-fast-element-character-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-trailing-wildcard-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-trailing-wildcard-word-positions($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-set-fast-element-trailing-wildcard-searches($CONFIG, $DATABASE, fn:true()) 
+let $CONFIG := admin:database-add-word-lexicon($CONFIG, $DATABASE, admin:database-word-lexicon("http://marklogic.com/collation/codepoint"))  
+
+return
+  admin:save-configuration($CONFIG)
+----
+
+To tear down the database:
+
+[source,xquery]
+----
+xquery version "1.0-ml";
+
+import module namespace info = "http://marklogic.com/appservices/infostudio" at "/MarkLogic/appservices/infostudio/info.xqy";
+
+info:database-delete("{YOUR-DATABASE-NAME-HERE}")
+----
