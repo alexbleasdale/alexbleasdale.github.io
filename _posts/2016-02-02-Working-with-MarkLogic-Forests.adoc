@@ -8,11 +8,5 @@ Example: returning a string containing a comma separated list of all forests for
 ----
 xquery version "1.0-ml";
 
-text {
-let $stuff := 
-for $i in xdmp:database-forests(xdmp:database("test"))
-return xs:string($i)
-return
-string-join($stuff, ", ")
-}
+text{(for $i in xdmp:database-forests(xdmp:database("test")) return xs:string($i)}
 ----
