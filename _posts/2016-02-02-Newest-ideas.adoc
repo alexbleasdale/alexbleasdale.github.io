@@ -2,7 +2,7 @@
 
 Testdriving HubPress for GitHub
 
-Here's a new idea:
+Example: returning a string containing a comma separated list of all forests for a given database.
 
 [source,xquery]
 ----
